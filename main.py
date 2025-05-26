@@ -1,5 +1,3 @@
-import re
-from turtle import title
 from bs4 import BeautifulSoup
 import requests
 
