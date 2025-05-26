@@ -17,24 +17,29 @@ job_info = [{
             "job_page": job.find("a", class_="posoverlay_srp")["href"]
             } for job in job_list]
 
-for info in job_info:
+for i, info in enumerate(job_info):
     has_int = False
+
     if info["posted"] == "few days ago":
         continue
+    
     for word in info["posted"].split():
         if word.isdigit():
             if int(word) > 5:
                 has_int = True
             break
-
+        
     if has_int == True: 
         has_int = False
         continue
 
-    print(f"Job Title: {info["title"]}")
-    print(f"Company Title: {info["company"]}")
-    print(f"Location: {info["location"]}")
-    print(f"Experience: {info["experience"]}")
-    print(f"Skills: {info["skills"]}")
-    print(f"Posted: {info["posted"]}")
-    print(f"Job-Page: {info["job_page"]}\n")
+    with open(f"post_{i}.txt", "a") as f:
+        f.write(f"Job Title: {info["title"]}")
+        f.write(f"Company Title: {info["company"]}")
+        f.write(f"Location: {info["location"]}")
+        f.write(f"Experience: {info["experience"]}")
+        f.write(f"Skills: {info["skills"]}")
+        f.write(f"Posted: {info["posted"]}")
+        f.write(f"Job-Page: {info["job_page"]}\n")
+    
+    print(f"Saved Job {i}.")
