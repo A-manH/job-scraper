@@ -33,13 +33,14 @@ for i, info in enumerate(job_info):
         has_int = False
         continue
 
-    with open(f"post_{i}.txt", "a") as f:
-        f.write(f"Job Title: {info["title"]}")
-        f.write(f"Company Title: {info["company"]}")
-        f.write(f"Location: {info["location"]}")
-        f.write(f"Experience: {info["experience"]}")
-        f.write(f"Skills: {info["skills"]}")
-        f.write(f"Posted: {info["posted"]}")
-        f.write(f"Job-Page: {info["job_page"]}\n")
+    with open(f"post_{i}.txt", "w") as f:
+        f.write(f"Job Title: {info['title']}\n")
+        f.write(f"Company Title: {info['company']}\n")
+        f.write(f"Location: {info['location']}\n")
+        f.write(f"Experience: {info['experience']}\n")
+        f.write(f"Skills: {info['skills']}\n")
+        f.write(f"Posted: {info['posted']}\n")
+        f.write(f"Job-Page: {info['job_page']}\n")
+
     
     print(f"Saved Job {i}.")
