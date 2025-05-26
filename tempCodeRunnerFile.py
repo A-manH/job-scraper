@@ -1,6 +1,0 @@
-        f.write(f"Company Title: {info['company']}\n")
-        f.write(f"Location: {info['location']}\n")
-        f.write(f"Experience: {info['experience']}\n")
-        f.write(f"Skills: {info['skills']}\n")
-        f.write(f"Posted: {info['posted']}\n")
-        f.write(f"Job-Page: {info['job_page']}\n")
