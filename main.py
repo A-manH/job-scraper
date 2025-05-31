@@ -1,44 +1,68 @@
 from bs4 import BeautifulSoup
 import requests
+import sqlite3
+import pandas as pd
+import re
 
-html_text = requests.get("https://www.timesjobs.com/candidate/job-search.html?searchType=personalizedSearch&from=submit&searchTextSrc=&searchTextText=&txtKeywords=python&txtLocation=").text
-soup = BeautifulSoup(html_text, "lxml")
+def parse(url):
+    html_text = requests.get(url).text
+    soup = BeautifulSoup(html_text, "lxml")
+    return soup
 
-job_list = soup.find_all("li", class_="clearfix job-bx wht-shd-bx")
-job_info = [{
-            "title": job.a.text.strip(), 
-            "company": job.h3.text.strip(), 
-            "location": job.find("li", class_="srp-zindex location-tru").text.strip(),
-            "experience": job.find("i", class_="srp-icons experience").parent.text.strip(),
-            "skills": ", ".join(job.find("div",class_="more-skills-sections").text.split()),
-            "posted": job.find("span", class_="sim-posted").text.strip(),
-            "job_page": job.find("a", class_="posoverlay_srp")["href"]
-            } for job in job_list]
+def get_jobs():
+    soup = parse("https://www.timesjobs.com/candidate/job-search.html?searchType=personalizedSearch&from=submit&searchTextSrc=&searchTextText=&txtKeywords=python&txtLocation=")
+    job_list = soup.find_all("li", class_="clearfix job-bx wht-shd-bx")
+    job_info = [{
+                "title": job.a.text.strip(), 
+                "company": job.h3.text.strip(), 
+                "location": job.find("li", class_="srp-zindex location-tru").text.strip(),
+                "experience": job.find("i", class_="srp-icons experience").parent.text.strip(),
+                "skills": ", ".join(job.find("div",class_="more-skills-sections").text.split()),
+                "posted": job.find("span", class_="sim-posted").text.strip(),
+                "job_page": job.find("a", class_="posoverlay_srp")["href"]
+                } for job in job_list]
+    return job_info
 
-for i, info in enumerate(job_info):
-    has_int = False
 
-    if info["posted"] == "few days ago":
-        continue
-    
-    for word in info["posted"].split():
-        if word.isdigit():
-            if int(word) > 5:
-                has_int = True
-            break
-        
-    if has_int == True: 
+connection = sqlite3.connect("data.db")
+c = connection.cursor()
+def get_info():
+    job_info = get_jobs()
+    for i, info in enumerate(job_info):
         has_int = False
-        continue
 
-    with open(f"post_{i}.txt", "w") as f:
-        f.write(f"Job Title: {info['title']}\n")
-        f.write(f"Company Title: {info['company']}\n")
-        f.write(f"Location: {info['location']}\n")
-        f.write(f"Experience: {info['experience']}\n")
-        f.write(f"Skills: {info['skills']}\n")
-        f.write(f"Posted: {info['posted']}\n")
-        f.write(f"Job-Page: {info['job_page']}\n")
+        if info["posted"] == "few days ago":
+            continue
+        
+        for word in info["posted"].split():
+            if word.isdigit():
+                if int(word) > 5:
+                    has_int = True
+                break
+            
+        if has_int == True: 
+            has_int = False
+            continue
 
-    
-    print(f"Saved Job {i}.")
+        matches = re.search(r"(\d)[- ]+(\d)", info["experience"])
+        min_exp, max_exp = matches.groups()
+
+        c.execute('''INSERT INTO data(id, job_title, company_name, min_exp, max_exp, location, date_posted, job_page) VALUES(?,?,?,?,?,?,?,?)''', 
+                    (
+                        i,
+                      info["title"],
+                      info["company"],
+                      int(min_exp),
+                      int(max_exp),
+                      info["location"],
+                      info["posted"],
+                      info["job_page"]
+                    ))
+        
+connection.commit()
+get_info()
+
+df = pd.read_sql_query("SELECT * FROM data", connection)
+df.to_csv("data.csv")
+connection.close()
+
